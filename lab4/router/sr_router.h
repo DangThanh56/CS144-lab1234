@@ -41,7 +41,7 @@ struct sr_rt;
  *
  * -------------------------------------------------------------------------- */
 
-struct sr_instance
+typedef struct sr_instance
 {
     int  sockfd;   /* socket to server */
     char user[32]; /* user name */
@@ -52,9 +52,10 @@ struct sr_instance
     struct sr_if* if_list; /* list of interfaces */
     struct sr_rt* routing_table; /* routing table */
     struct sr_arpcache cache;   /* ARP cache */
+    struct sr_nat *nat;     /* NAT structure */
     pthread_attr_t attr;
     FILE* logfile;
-};
+}sr_instance_t;
 
 /* -- sr_main.c -- */
 int sr_verify_routing_table(struct sr_instance* sr);
@@ -67,6 +68,17 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
+void SendArpRequest(struct sr_instance* sr, struct sr_arpreq* request); 
+void IpSendTypeThreeIcmpPacket(struct sr_instance* sr, sr_icmp_code_t icmpCode,
+                                                sr_ip_hdr_t* originalPacket);
+void HandleReceivedPacketToRouter(struct sr_instance* sr, sr_ip_hdr_t* packet,
+                                    unsigned int length, sr_if_t *interface);
+void ForwardIpPacket(struct sr_instance* sr, sr_ip_hdr_t* packet,
+                  unsigned int length, struct sr_if* receivedInterface); 
+sr_rt_t* getLongestPrefixRoute(struct sr_instance* sr, in_addr_t destIp);
+bool IcmpPerformIntegrityCheck(sr_icmp_hdr_t *icmpPacket, unsigned int length);
+bool TcpPerformIntegrityCheck(sr_ip_hdr_t *tcpPacket, unsigned int length);
+bool IpDestinationIsRouter(struct sr_instance* sr, sr_ip_hdr_t* packet);
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );
@@ -74,4 +86,9 @@ void sr_set_ether_ip(struct sr_instance* , uint32_t );
 void sr_set_ether_addr(struct sr_instance* , const unsigned char* );
 void sr_print_if_list(struct sr_instance* );
 
+/* -- sr_nat.c --*/
+void natHandleRecievedIpPacket(struct sr_instance* sr, sr_ip_hdr_t* ipPacket, unsigned int length,
+  sr_if_t *receivedInterface);
+void natNotdonePacketMapping(struct sr_instance* sr, sr_ip_hdr_t* ipDatagram, unsigned int length, 
+                      sr_if_t *receivedInterface);
 #endif /* SR_ROUTER_H */

@@ -81,23 +81,24 @@ struct sr_packet {
     struct sr_packet *next;
 };
 
-struct sr_arpentry {
+typedef struct sr_arpentry {
     unsigned char mac[6]; 
     uint32_t ip;                /* IP addr in network byte order */
     time_t added;         
     int valid;
-};
+}sr_arpentry_t;
 
-struct sr_arpreq {
+typedef struct sr_arpreq {
     uint32_t ip;
     time_t sent;                /* Last time this ARP request was sent. You 
                                    should update this. If the ARP request was 
                                    never sent, will be 0. */
     uint32_t times_sent;        /* Number of times this request was sent. You 
                                    should update this. */
+    struct sr_if *requestedInterface; /*Receive interface of ARP packet*/                                   
     struct sr_packet *packets;  /* List of pkts waiting on this req to finish */
     struct sr_arpreq *next;
-};
+}sr_arpreq_t;
 
 struct sr_arpcache {
     struct sr_arpentry entries[SR_ARPCACHE_SZ];

@@ -101,12 +101,30 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
+typedef struct __attribute__((packed))
+{  
+  uint8_t icmp_type; 
+  uint8_t icmp_code; 
+  uint16_t icmp_sum; 
+  uint16_t ident; /* Echo request/reply identification number */
+  uint16_t seq_num; /* Echo request/reply sequence number */
+  uint8_t data[1]; /* Length data sent with request/reply */
+} sr_icmp_t0_hdr_t, sr_icmp_t8_hdr_t;
 
+typedef struct __attribute__((packed))
+{  
+  uint8_t icmp_type; 
+  uint8_t icmp_code; 
+  uint16_t icmp_sum; 
+  uint16_t unused; 
+  uint8_t data[1]; 
+} sr_icmp_t11_hdr_t;
 
 
 /*
  * Structure of an internet header, naked of options.
  */
+#define IP_ADDR_LEN 4
 struct sr_ip_hdr
   {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -148,11 +166,28 @@ struct sr_ethernet_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
-
-
+ 
 enum sr_ip_protocol {
-  ip_protocol_icmp = 0x0001,
+  ip_protocol_icmp = 1,
+  ip_protocol_tcp = 6,
+  ip_protocol_udp = 17
 };
+
+enum sr_icmp_type {
+  icmp_type_echo_reply = 0,
+  icmp_type_desination_unreachable = 3,
+  icmp_type_echo_request = 8,
+  icmp_type_time_exceeded = 11
+};
+typedef enum sr_icmp_type sr_icmp_type_t;
+
+enum sr_icmp_dest_unreach_code {
+  icmp_code_network_unreachable = 0,
+  icmp_code_destination_host_unreachable = 1,
+  icmp_code_destination_port_unreachable = 3
+};
+typedef enum sr_icmp_type sr_icmp_code_t;
+
 
 enum sr_ethertype {
   ethertype_arp = 0x0806,
@@ -183,6 +218,50 @@ struct sr_arp_hdr
     uint32_t        ar_tip;             /* target IP address            */
 } __attribute__ ((packed)) ;
 typedef struct sr_arp_hdr sr_arp_hdr_t;
+
+
+#define TCP_OFFSET (0xF000)
+/* Urgent Pointer   */
+#define TCP_URG    (0x0020)
+/* Acknowledgment   */
+#define TCP_ACK    (0x0010)
+/* Push flag */
+#define TCP_PSH    (0x0008)
+/* Reset */
+#define TCP_RST    (0x0004)
+/* Synchronize sequence numbers */
+#define TCP_SYN    (0x0002)
+/* FIN flag */
+#define TCP_FIN    (0x0001)
+
+typedef struct __attribute__((packed))
+{
+  uint16_t sourcePort; 
+  uint16_t destinationPort; 
+  uint32_t sequenceNumber; 
+  uint32_t acknowledgmentNumber; 
+  uint16_t offset_controlBits;
+  uint16_t window; 
+  uint16_t checksum;
+  uint16_t urgentPointer; 
+} sr_tcp_hdr_t;
+
+typedef struct __attribute__((packed))
+{
+  uint32_t sourceAddress; 
+  uint32_t destinationAddress; 
+  uint8_t reserved; /* Always is 0 */
+  uint8_t protocol; /* Should be ip_protocol_tcp */
+  uint16_t tcpLength;
+} sr_tcp_ip_pseudo_hdr_t;
+
+typedef struct __attribute__((packed))
+{
+  uint16_t sourcePort;
+  uint16_t destinationPort;
+  uint16_t length;
+  uint16_t checksum;
+} sr_udp_hdr_t;
 
 #define sr_IFACE_NAMELEN 32
 

@@ -11,6 +11,8 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 
+#define MAX_NUM_ARP_SENT 5
+
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
@@ -18,6 +20,28 @@
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
     /* Fill this in */
+    sr_arpreq_t* request;
+    /*Duyet qua all requests and resend request if necessary*/
+    for(request = sr->cache.requests; request != NULL; request = request->next)
+    {
+        if(request->times_sent < MAX_NUM_ARP_SENT)
+        {
+            /*Send again*/
+            /*Send ARP request*/
+            request->times_sent++;
+        }
+        else
+        {
+            struct sr_packet* packet;
+
+            for(packet = request->packets; packet != NULL; packet = packet->next)
+            {
+                /*send icmp destination unreachable*/
+            }
+        }
+        /*Destroy ARP request*/
+        sr_arpreq_destroy(&sr->cache, request);
+    }
 }
 
 /* You should not need to touch the rest of this code. */

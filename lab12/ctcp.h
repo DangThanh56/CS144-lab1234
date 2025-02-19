@@ -192,4 +192,5 @@ void ctcp_output(ctcp_state_t *state);
  */
 void ctcp_timer();
 
+
 #endif /* CTCP_H */
